@@ -11,7 +11,7 @@
 	const url = require('url')
 	
 	root.DeepNest = new DeepNest();
-	
+
 	function DeepNest(){
 		var self = this;
 		

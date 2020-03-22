@@ -17,7 +17,8 @@
 		<script src="util/svgpanzoom.js"></script>
 		<script src="util/d3-polygon.js"></script>
 		<script src="util/simplify.js"></script>
-		
+
+		<script src="webserver/webserver.js"></script>
 		<script src="svgparser.js"></script>
 		<script src="deepnest.js"></script>
 
@@ -37,7 +38,13 @@
 		const request = require('request');
 		const http = require('http');
 		const path = require('path');
-		
+
+        StartNesting = null;
+        GlobalStop = null;
+        GlobalExport = null;
+        GlobalGetPartsPlaced = null;
+        window.GlobalGetSelected = null;
+
 		ready(function(){
 			// main navigation			
 			var tabs = document.querySelectorAll('#sidenav li');
@@ -64,7 +71,10 @@
 					return false;
 				});
 			});
-			
+
+			// webserver start
+			window.Webserver.start();
+
 			// config form
 			const config = require('electron-settings');
 			window.config = config;
@@ -272,7 +282,7 @@
 				  }
 			  }
 			});
-			
+
 			var ractive = new Ractive({
 				el: '#homecontent',
 				//magic: true,
@@ -320,7 +330,9 @@
 				},
 				components: { dimensionLabel: label }
 			});
-			
+
+            window.GlobalGetSelected = ractive.get().getSelected;
+
 			var mousedown = 0;
 			document.body.onmousedown = function() { 
 			  mousedown = 1;
@@ -808,6 +820,7 @@
 			};
 			
 			var startnest = function(){
+
 				/*function toClipperCoordinates(polygon){
 					var clone = [];
 					for(var i=0; i<polygon.length; i++){
@@ -921,10 +934,27 @@
 					message("Please mark at least one part as the sheet");
 				}
 			}
-			
+			StartNesting = startnest;
+
 			document.querySelector('#startnest').onclick = startnest;
 			
 			var stop = document.querySelector('#stopnest');
+			GlobalStop = function() {
+
+                ipcRenderer.send('background-stop');
+                DeepNest.stop();
+                document.querySelectorAll('li.progress').forEach(function(p){
+                    p.removeAttribute('id');
+                    p.className = 'progress';
+                });
+                stop.className = 'button stop disabled';
+                setTimeout(function(){
+                    stop.className = 'button start';
+                    stop.innerHTML = 'Start nest';
+                }, 3000);
+
+			};
+
 			stop.onclick = function(e){
 				if(stop.className == 'button stop'){
 					ipcRenderer.send('background-stop');
@@ -1002,7 +1032,21 @@
 					}
 				});
 			};
-			
+
+			GlobalExport = function() {
+
+                var selected = DeepNest.nests.filter(function(n){
+                    return n.selected;
+                });
+
+                if(selected.length == 0){
+                    return false;
+                }
+
+                return exportNest(selected.pop());
+
+			};
+
 			var exportdxf = document.querySelector('#exportdxf');
 			exportdxf.onclick = function(){
 				var dialog = app.dialog;
@@ -1404,6 +1448,8 @@
 					}
 				}
 			});
+
+			window.GlobalGetPartsPlaced = window.nest.get().getPartsPlaced;
 			
 			nest.on('selectnest', function(e, n) {
 				for(var i=0; i<DeepNest.nests.length; i++){
