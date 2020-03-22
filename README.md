@@ -11,6 +11,7 @@ Deepnest is a desktop application based on [SVGNest](https://github.com/Jack000/
 - support for DXF files (via conversion)
 - new path approximation feature for highly complex parts
 
+**Mac Hint:**
 Environment Flags to build an run on Macs > 10.9:
 CXXFLAGS="-mmacosx-version-min=10.9" LDFLAGS="-mmacosx-version-min=10.9" npm install
 
