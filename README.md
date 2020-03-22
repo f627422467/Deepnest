@@ -13,3 +13,6 @@ Deepnest is a desktop application based on [SVGNest](https://github.com/Jack000/
 
 Environment Flags to build an run on Macs > 10.9:
 CXXFLAGS="-mmacosx-version-min=10.9" LDFLAGS="-mmacosx-version-min=10.9" npm install
+
+**Changes:**
+Added a simple REST API. Enables to use Deepnest in an automated generate/build/layout process.
